@@ -1,0 +1,63 @@
+---
+title: 'PEC1. Caquèxia: Metadades'
+author: "Maria Paricio Navas"
+date: "2025-03-28"
+output: html_document
+---
+# Metadades
+
+S'obtenen les metadades dels metabòlits i dels pacients de l'arxiu human_cachexia.csv.
+
+En el cas dels metabòlits les metadades indiquen el nom de cadascún. Es mostren 63 metabòlits, entre ells: 1-6-Anyhidro-beta-D-glucose, 1-Methylnicotinamide, 2- Aminobutyrate, 2-Hydroxyisobutyrate, etc.
+
+En el cas dels pacients (mostres) s'observen 77 amb la seva identificació (ID) y la condició:
+
+- Identificació (patient_id): S'observen les identificacions dels 77 pacients com per exemple PIF_178, PIF_087, PIF_090, NETL_005_VI, etc.
+
+- Condició (conditions): Hi ha dues condicions: control (grup control) i cachexia (pacients de caquèxia)
+
+En els apartats posteriors es mostra el procés d'obtenció i identificació d'aquestes metadades.
+
+# Obtenció de les metadades
+
+```{r}
+library(tidyverse) # Es carreguen diferents llibreries
+library(readr)
+library(dplyr)
+```
+
+## Es carreguen les dades:
+
+```{r}
+cachexia_df <- read_csv("human_cachexia.csv") # Es carrega el fitxer csv amb les dades
+
+glimpse(cachexia_df) # Es visualitzen les primeres files
+```
+
+## Identificació de dades d'expressió i metadades:
+
+```{r}
+data_matrix <- as.matrix(cachexia_df[, 3:ncol(cachexia_df)]) # Es crea la matriu d'expressió
+data_matrix <- t(data_matrix)  # Es transposa per a que els metabòlits estiguin en files i les mostres en columnes (per a poder crear l'objecte de SummarizedExperiment)
+head(data_matrix) # S'observen les primeres files de la matriu
+
+rownames(data_matrix) <- colnames(cachexia_df)[3:ncol(cachexia_df)]  # S'asignen els noms dels metabòlits a les files
+colnames(data_matrix) <- cachexia_df[[1]]  # S'asignen els noms de les mostres (Patient ID) a les columnes
+
+metab_metadata <- data.frame(Metabolito = rownames(data_matrix)) # Es creen les metadades de les files (metabòlits)
+rownames(metab_metadata) <- rownames(data_matrix) # S'asignen els noms de les files a les metadades
+ 
+individus_metadata <- data.frame( # Es creen les metadades de les columnes (dels pacients) 
+  patient_id = colnames(data_matrix), # S'asigna el nom a les columnes (Patient ID)
+  condition = rep(c("control", "cachexia"), length.out = ncol(data_matrix)) # S'afegeix la condició
+)
+rownames(individus_metadata) <- individus_metadata$patient_id
+
+```
+
+S'extreuen les metadades:
+```{r}
+metab_metadata
+individus_metadata
+```
+
